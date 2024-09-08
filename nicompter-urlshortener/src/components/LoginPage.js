@@ -12,7 +12,7 @@ const LoginPage = () => {
         event.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:4444/login', {
+            const response = await fetch('http://localhost:4444/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

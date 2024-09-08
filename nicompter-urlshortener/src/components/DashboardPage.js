@@ -5,82 +5,99 @@ import { faCog, faTrashAlt, faSignOutAlt } from '@fortawesome/free-solid-svg-ico
 import './DashboardPage.css';
 
 const DashboardPage = () => {
-    const [nodes, setNodes] = useState([]);
+    const [links, setlinks] = useState([]);
     const [username, setUsername] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const [sortOrder, setSortOrder] = useState('asc'); // Ascending by default
+    const [sortedLinks, setSortedLinks] = useState([...links]); // Copy of links to sort
+
+    const sortByClicks = () => {
+        const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+        const sorted = [...sortedLinks].sort((a, b) => {
+            return newSortOrder === 'asc' ? a.clicks - b.clicks : b.clicks - a.clicks;
+        });
+        setSortedLinks(sorted);
+        setSortOrder(newSortOrder);
+    };
 
     useEffect(() => {
-        const fetchNodes = async () => {
+        const fetchlinks = async () => {
             try {
-                const response = await fetch('http://localhost:5001/api/nodes/nodes', {
+                const response = await fetch('http://localhost:4444/api/links', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
 
-                if (!response.ok) throw new Error('Failed to fetch nodes');
+                if (!response.ok) throw new Error('Failed to fetch links');
 
                 const data = await response.json();
-                setNodes(data);
+                setlinks(data);
             } catch (error) {
-                setError('Error fetching nodes');
+                setError('Error fetching links');
             }
         };
 
-        const extractUsernameFromToken = async () => {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('Error no token');
-            }
+        const fetchUsername = async () => {
             try {
-                const response = await fetch(`http://localhost:5001/api/auth/username/${JSON.parse(atob(localStorage.getItem('token').split('.')[1])).id}`);
+                const response = await fetch('http://localhost:4444/api/username', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
 
-                if (!response.ok) throw new Error('User not found');
+                if (!response.ok) throw new Error('Failed to fetch username');
 
                 const data = await response.json();
-                setUsername(data.username);
+                setUsername(data);
             } catch (error) {
-                setError('User not found');
+                console.log(error)
+                setError('Error fetching username');
             }
         };
 
-        fetchNodes();
-        extractUsernameFromToken();
+        fetchlinks();
+        fetchUsername();
     }, []);
 
-    const handleCreateNode = () => {
+    // Aktualisiere sortedLinks, wenn sich links ändert
+    useEffect(() => {
+        setSortedLinks([...links]);
+    }, [links]);
+
+    const handleCreateLink = () => {
         navigate('/create');
     };
 
-    const handleSettings = (nodeId) => {
-        navigate(`/node/${nodeId}`);
-    };
-
-    const handleDelete = (nodeId, nodeName) => {
-        const confirmDelete = window.confirm(`Möchten Sie den Node "${nodeName}" wirklich löschen?`);
+    const handleDelete = (linkId, linkName) => {
+        const confirmDelete = window.confirm(`Do you really want to delete the short link "/${linkName}"?`);
         if (confirmDelete) {
-            deleteNode(nodeId);
+            deleteLink(linkId);
         }
     };
 
-    const deleteNode = async (nodeId) => {
+    const deleteLink = async (linkId) => {
         try {
-            await fetch(`http://localhost:5001/api/nodes/delete/${nodeId}`, {
+            await fetch(`http://localhost:4444/api/delete/${linkId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
+                },
             });
-            setNodes((prevNodes) => prevNodes.filter((node) => node._id !== nodeId));
+            setlinks((prevlinks) => prevlinks.filter((link) => link._id !== linkId));
         } catch (error) {
-            setError('Error deleting node');
+            setError('Error deleting link');
         }
     };
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         navigate('/login');
+    };
+
+    const handleStats = (shortLink) => {
+        navigate(`/stats/${shortLink}`);
     };
 
     return (
@@ -94,44 +111,53 @@ const DashboardPage = () => {
                 </button>
             </div>
             {error && <p className="error">{error}</p>}
-            <div className="servers-container-wrapper">
-                <div className="servers-header">
-                    <h2>Aktuelle Nodes</h2>
-                    <button className="button-85" onClick={handleCreateNode}>Node erstellen</button>
+            <div className="links-container-wrapper">
+                <div className="links-header">
+                    <h2>Current Links</h2>
+                    <button className="button-85" onClick={handleCreateLink}>Create Link</button>
                 </div>
-                <div className="servers-container">
-                    {nodes.length > 0 ? (
-                        nodes.map(node => (
-                            <div
-                                key={node._id}
-                                className="server-item"
-                                onClick={() => handleSettings(node._id)}
-                            >
-                                <span className="server-name">{node.name}</span>
-                                <div className="icons-container">
-                                    <FontAwesomeIcon
-                                        icon={faCog}
-                                        className="icon-settings"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSettings(node._id);
-                                        }}
-                                    />
-                                    <FontAwesomeIcon
-                                        icon={faTrashAlt}
-                                        className="icon-delete"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDelete(node._id, node.name);
-                                        }}
-                                    />
-                                </div>
-                            </div>
-                        ))
-                    ) : (
-                        <p>Keine Nodes vorhanden.</p>
-                    )}
-                </div>
+                <div className="links-container">
+            {sortedLinks.length > 0 ? (
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Short Link</th>
+                            <th>Destination Link</th>
+                            <th onClick={sortByClicks} style={{ cursor: 'pointer' }}>
+                                Clicks {sortOrder === 'asc' ? '↑' : '↓'}
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {sortedLinks.map(link => (
+                                    <tr key={link._id}>
+                                        <td>{"/" + link.shortLink}</td>
+                                        <td>{link.destinationLink}</td>
+                                        <td>{link.clicks}</td>
+                                        <td>
+                                            <FontAwesomeIcon
+                                                icon={faCog}
+                                                className="icon-settings"
+                                                onClick={() => handleStats(link.shortLink)} // Navigiert zur Statistikseite
+                                            />
+                                            <FontAwesomeIcon
+                                                icon={faTrashAlt}
+                                                className="icon-delete"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDelete(link._id, link.shortLink);
+                                                }}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                    </tbody>
+                </table>
+            ) : (
+                <p>No links available.</p>
+            )}
+        </div>
             </div>
         </div>
     );

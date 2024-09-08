@@ -4,6 +4,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const app = express();
 const bodyParser = require('body-parser');
+const cors = require("cors");
+require('dotenv').config()
+
+//cors
+app.use(cors())
+
+// Secret Key for JWT
+const JWT_SECRET = process.env.JWT_SECRET;  // Replace this with a secure key in production
 
 // Middleware
 app.use(bodyParser.json());
@@ -36,9 +44,6 @@ const User = mongoose.model('User', userSchema);
 const Link = mongoose.model('Link', linkSchema);
 const Click = mongoose.model('Click', clickSchema);
 
-// Secret Key for JWT
-const JWT_SECRET = '5b6a93c1186511ad8fc60f47498075fd3616c65cfc5f660a97b86137216e40ba996e8636a5beda981378d3fd557fb2a5e80202d34e0c34f616758b184e771d9d481b3d569831218966c0dc947733218cf17d0e09d4ae225895d6ae1f70f0480f0b0218c0292c07942bab0bb3c7c59063013c048a18b9c6c9666a87905e88221ab1073a5798ab8825e05a7991f5bf3bfc371d2671aa5a2ba5252cb5e8ffd12b7798364b620c01bafd3b3bdfbc9de549948dd983afa661a52fcc62bca9b4bb723471c6da8177d2ae8c9023b1b1891ac582251fdf99d168f9c0758760e7875190e462ac5279af07ee9092233d4d6f0e3c81631bfae0b05357b6b19b5c09c32f4e43';  // Replace this with a secure key in production
-
 // Auth Middleware
 const auth = (req, res, next) => {
     const token = req.header('Authorization').replace('Bearer ', '');
@@ -56,11 +61,14 @@ const auth = (req, res, next) => {
 };
 
 // Registrierung
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
+    if(process.env.REGISTRATION_DISABLED) return res.status(403).send("Registration is currently disabled");
     const { username, password } = req.body;
 
     try {
         const salt = await bcrypt.genSalt(10);
+        console.log("Benutzername: ",username)
+        console.log("Passwort: ",password)
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = new User({ username, password: hashedPassword });
@@ -68,12 +76,13 @@ app.post('/register', async (req, res) => {
 
         res.status(201).send('User registered successfully');
     } catch (err) {
+        console.log(err)
         res.status(500).send('Error registering user.');
     }
 });
 
 // Login
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
@@ -91,8 +100,11 @@ app.post('/login', async (req, res) => {
 });
 
 // Route zum Hinzufügen eines neuen Kurzlinks (nur für authentifizierte Benutzer)
-app.post('/add', auth, async (req, res) => {
+app.post('/api/add', auth, async (req, res) => {
     const { shortLink, destinationLink } = req.body;
+
+    if(shortLink == "api") return res.status(400).send('Short link already exists.');
+    if(shortLink.includes("/")) return res.status(400).send('Short link is not allowed to contain /');
 
     try {
         const newLink = new Link({ shortLink, destinationLink, userId: req.user._id });
@@ -134,7 +146,7 @@ app.get('/:shortLink', async (req, res) => {
 });
 
 // Route für Statistiken (nur für authentifizierte Benutzer)
-app.get('/stats/:shortLink', auth, async (req, res) => {
+app.get('/api/stats/:shortLink', auth, async (req, res) => {
     const shortLink = req.params.shortLink;
 
     try {
@@ -147,6 +159,47 @@ app.get('/stats/:shortLink', auth, async (req, res) => {
         res.json({ destinationLink: link.destinationLink, clicks: link.clicks, clickDetails: clicks });
     } catch (err) {
         res.status(500).send('Error retrieving stats.');
+    }
+});
+
+// Route zum Entfernen eines bestehenden Links (nur für authentifizierte Benutzer)
+app.delete('/api/delete/:linkId', auth, async (req, res) => {
+    const shortLinkId = req.params.linkId;
+
+    try{
+        const link = await Link.findOneAndDelete({_id: shortLinkId, userId: req.user._id});
+        if(!link){
+            return res.status(404).send("Link not found.")
+        }
+        await Click.deleteMany({linkId: link._id})
+        res.status(200).send("Link deleted successfully.")
+    } catch(err) {
+        console.log(err)
+        res.status(500).send('Error deleting ShortLink.');
+    }
+});
+
+app.get('/api/links', auth, async (req, res) => {
+    try{
+        const links = await Link.find({ userId: req.user._id})
+        res.json(links);
+    } catch(err) {
+        console.log(err)
+        res.status(500).send('Error requesting links');
+    }
+});
+
+app.get('/api/username', auth, async (req, res) => {
+    try{
+        const user = await User.findOne({_id: req.user._id})
+        if(!user){
+            return res.status(404).send("User not found.");
+        }
+        
+        res.json(user.username);
+    } catch(err){
+        console.log(err)
+        res.status(500).send('Error retrieving username.');
     }
 });
 

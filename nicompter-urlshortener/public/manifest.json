@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Nicompter URL Shorter",
+  "name": "Simple URL shorter by Nicompter",
   "icons": [
     {
       "src": "favicon.ico",

@@ -21,7 +21,6 @@ h1 {
     font-size: 2em;
     margin: 0;
     text-align: center;
-    /* Zentriert den Begrüßungstext */
 }
 
 .logout-button {
@@ -32,13 +31,21 @@ h1 {
     cursor: pointer;
 }
 
-.servers-container-wrapper {
+.logout-button:hover {
+    background: none;
+    border: none;
+    color: rgb(197, 0, 0);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.links-container-wrapper {
     width: 100%;
     max-width: 1200px;
     flex-grow: 1;
 }
 
-.servers-header {
+.links-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -46,14 +53,14 @@ h1 {
     width: 100%;
 }
 
-.servers-container {
+.links-container {
     width: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     max-height: calc(100vh - 220px);
 }
 
-.servers-header h2 {
+.links-header h2 {
     font-size: 1.5em;
     margin: 0;
 }
@@ -69,8 +76,6 @@ h1 {
     z-index: 0;
     border-radius: 10px;
     user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
     font-weight: bold;
     font-family: 'Roboto', sans-serif;
 }
@@ -93,7 +98,6 @@ h1 {
     background-size: 400%;
     z-index: -1;
     filter: blur(5px);
-    -webkit-filter: blur(5px);
     width: calc(100% + 4px);
     height: calc(100% + 4px);
     animation: glowing-button-85 20s linear infinite;
@@ -105,11 +109,9 @@ h1 {
     0% {
         background-position: 0 0;
     }
-
     50% {
         background-position: 400% 0;
     }
-
     100% {
         background-position: 0 0;
     }
@@ -127,45 +129,81 @@ h1 {
     border-radius: 10px;
 }
 
-.server-item {
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
     background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 1em;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     margin-bottom: 1em;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+}
+
+thead {
+    background-color: #00d394;
+    color: #fff;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+th, td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
     font-family: 'Roboto', sans-serif;
-    transition: background-color 0.3s, box-shadow 0.3s;
+    text-align: left;
 }
 
-.server-item:hover {
-    background-color: #c2ffb0;
-    box-shadow: 0 4px 8px rgba(0, 255, 47, 0.2);
-}
-
-.icons-container {
-    display: flex;
-    gap: 10px;
-}
-
-.icon-settings {
-    color: #007bff;
+th {
+    position: relative;
     cursor: pointer;
-    transition: color 0.3s;
+}
+
+th:hover {
+    background-color: #00aa77;
+}
+
+th::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+}
+
+th.sort-asc::after {
+    border-bottom-color: #fff;
+}
+
+th.sort-desc::after {
+    border-top-color: #fff;
+}
+
+tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.icon-settings, .icon-delete {
+    cursor: pointer;
+    margin-right: 10px;
 }
 
 .icon-settings:hover {
-    color: #0159b8;
-}
-
-.icon-delete {
-    color: red;
-    cursor: pointer;
-    transition: color 0.3s;
+    color: #0056b3;
 }
 
 .icon-delete:hover {
-    color: darkred;
+    color: rgb(207, 0, 0);
+}
+
+.error {
+    color: red;
+    font-size: 1.2em;
+    margin-bottom: 1em;
 }

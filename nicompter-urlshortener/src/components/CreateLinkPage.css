@@ -1,6 +1,6 @@
 /* CreateNodePage.css */
 
-.create-node-container {
+.create-link-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -56,25 +56,6 @@
     border-color: #44c89f;
     /* Farbwechsel bei Fokus */
     outline: none;
-}
-
-.ram-container {
-    display: flex;
-    width: 100%;
-}
-
-.ram-container input {
-    flex: 1;
-    /* Nutzt den verfügbaren Platz */
-    margin-right: 10px;
-    /* Abstand zwischen Eingabefeld und Dropdown */
-}
-
-.ram-container select {
-    flex-basis: 100px;
-    /* Breite des Dropdowns */
-    height: fit-content;
-    /* Verhältnis zum Eingabefeld */
 }
 
 .button-33 {

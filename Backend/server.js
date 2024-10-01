@@ -17,7 +17,7 @@ const JWT_SECRET = process.env.JWT_SECRET;  // Replace this with a secure key in
 app.use(bodyParser.json());
 
 // MongoDB-Verbindung
-mongoose.connect('mongodb://localhost:27017/urlshortener')
+mongoose.connect('mongodb://127.0.0.1:27017/urlshortener')
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log('Error connecting to MongoDB:', err));
 
@@ -62,13 +62,13 @@ const auth = (req, res, next) => {
 
 // Registrierung
 app.post('/api/register', async (req, res) => {
-    if(process.env.REGISTRATION_DISABLED) return res.status(403).send("Registration is currently disabled");
+    if (process.env.REGISTRATION_DISABLED) return res.status(403).send("Registration is currently disabled");
     const { username, password } = req.body;
 
     try {
         const salt = await bcrypt.genSalt(10);
-        console.log("Benutzername: ",username)
-        console.log("Passwort: ",password)
+        console.log("Benutzername: ", username)
+        console.log("Passwort: ", password)
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const newUser = new User({ username, password: hashedPassword });
@@ -103,8 +103,8 @@ app.post('/api/login', async (req, res) => {
 app.post('/api/add', auth, async (req, res) => {
     const { shortLink, destinationLink } = req.body;
 
-    if(shortLink == "api") return res.status(400).send('Short link already exists.');
-    if(shortLink.includes("/")) return res.status(400).send('Short link is not allowed to contain /');
+    if (shortLink == "api") return res.status(400).send('Short link already exists.');
+    if (shortLink.includes("/")) return res.status(400).send('Short link is not allowed to contain /');
 
     try {
         const newLink = new Link({ shortLink, destinationLink, userId: req.user._id });
@@ -166,38 +166,38 @@ app.get('/api/stats/:shortLink', auth, async (req, res) => {
 app.delete('/api/delete/:linkId', auth, async (req, res) => {
     const shortLinkId = req.params.linkId;
 
-    try{
-        const link = await Link.findOneAndDelete({_id: shortLinkId, userId: req.user._id});
-        if(!link){
+    try {
+        const link = await Link.findOneAndDelete({ _id: shortLinkId, userId: req.user._id });
+        if (!link) {
             return res.status(404).send("Link not found.")
         }
-        await Click.deleteMany({linkId: link._id})
+        await Click.deleteMany({ linkId: link._id })
         res.status(200).send("Link deleted successfully.")
-    } catch(err) {
+    } catch (err) {
         console.log(err)
         res.status(500).send('Error deleting ShortLink.');
     }
 });
 
 app.get('/api/links', auth, async (req, res) => {
-    try{
-        const links = await Link.find({ userId: req.user._id})
+    try {
+        const links = await Link.find({ userId: req.user._id })
         res.json(links);
-    } catch(err) {
+    } catch (err) {
         console.log(err)
         res.status(500).send('Error requesting links');
     }
 });
 
 app.get('/api/username', auth, async (req, res) => {
-    try{
-        const user = await User.findOne({_id: req.user._id})
-        if(!user){
+    try {
+        const user = await User.findOne({ _id: req.user._id })
+        if (!user) {
             return res.status(404).send("User not found.");
         }
-        
+
         res.json(user.username);
-    } catch(err){
+    } catch (err) {
         console.log(err)
         res.status(500).send('Error retrieving username.');
     }

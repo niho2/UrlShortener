@@ -11,6 +11,7 @@ const DashboardPage = () => {
     const navigate = useNavigate();
     const [sortOrder, setSortOrder] = useState('asc'); // Ascending by default
     const [sortedLinks, setSortedLinks] = useState([...links]); // Copy of links to sort
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4444';
 
     const sortByClicks = () => {
         const newSortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
@@ -24,7 +25,7 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchlinks = async () => {
             try {
-                const response = await fetch('http://localhost:4444/api/links', {
+                const response = await fetch(API_URL + '/api/links', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -41,7 +42,7 @@ const DashboardPage = () => {
 
         const fetchUsername = async () => {
             try {
-                const response = await fetch('http://localhost:4444/api/username', {
+                const response = await fetch(API_URL + '/api/username', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
@@ -79,7 +80,7 @@ const DashboardPage = () => {
 
     const deleteLink = async (linkId) => {
         try {
-            await fetch(`http://localhost:4444/api/delete/${linkId}`, {
+            await fetch(API_URL + `/api/delete/${linkId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -117,20 +118,20 @@ const DashboardPage = () => {
                     <button className="button-85" onClick={handleCreateLink}>Create Link</button>
                 </div>
                 <div className="links-container">
-            {sortedLinks.length > 0 ? (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Short Link</th>
-                            <th>Destination Link</th>
-                            <th onClick={sortByClicks} style={{ cursor: 'pointer' }}>
-                                Clicks {sortOrder === 'asc' ? '↑' : '↓'}
-                            </th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {sortedLinks.map(link => (
+                    {sortedLinks.length > 0 ? (
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Short Link</th>
+                                    <th>Destination Link</th>
+                                    <th onClick={sortByClicks} style={{ cursor: 'pointer' }}>
+                                        Clicks {sortOrder === 'asc' ? '↑' : '↓'}
+                                    </th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sortedLinks.map(link => (
                                     <tr key={link._id}>
                                         <td>{"/" + link.shortLink}</td>
                                         <td>{link.destinationLink}</td>
@@ -152,12 +153,12 @@ const DashboardPage = () => {
                                         </td>
                                     </tr>
                                 ))}
-                    </tbody>
-                </table>
-            ) : (
-                <p>No links available.</p>
-            )}
-        </div>
+                            </tbody>
+                        </table>
+                    ) : (
+                        <p>No links available.</p>
+                    )}
+                </div>
             </div>
         </div>
     );

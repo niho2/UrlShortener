@@ -1,0 +1,41 @@
+version: '3'
+services:
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "4444:4444"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - mongo
+    networks:
+      - nicompter-url-shortener-network
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "4445:80"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    networks:
+      - nicompter-url-shortener-network
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - nicompter-url-shortener-network
+
+networks:
+  nicompter-url-shortener-network:
+    driver: bridge
+
+volumes:
+  mongo-data:

@@ -7,12 +7,13 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4444';
 
     const handleLogin = async (event) => {
         event.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:4444/api/login', {
+            const response = await fetch(API_URL + '/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -21,7 +22,9 @@ const LoginPage = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Fehler bei der Anmeldung');
+
+
+                throw new Error((await response.text()).toString());
             }
 
             const data = await response.json();
@@ -60,9 +63,6 @@ const LoginPage = () => {
                     </div>
                     {error && <p className="error">{error}</p>}
                     <button type="submit" className="button-33">Einloggen</button>
-                    <div className="signup-link">
-                        Noch keinen Account? <a href="/signup" className="link">Registrieren</a>
-                    </div>
                 </form>
             </div>
         </div>

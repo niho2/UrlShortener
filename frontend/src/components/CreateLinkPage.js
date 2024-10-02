@@ -8,11 +8,13 @@ const CreateLinkPage = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4444';
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        console.log(process.env); // Prüfe den gesamten Inhalt der Umgebungsvariablen
         try {
-            const response = await fetch('http://localhost:4444/api/add', {
+            const response = await fetch(API_URL + '/api/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -21,7 +23,7 @@ const CreateLinkPage = () => {
                 body: JSON.stringify({ shortLink, destinationLink })
             });
 
-            if (!response.ok) throw new Error('Failed to create ShortURL: '+await response.text());
+            if (!response.ok) throw new Error('Failed to create ShortURL: ' + await response.text());
 
             navigate('/dashboard');
         } catch (error) {

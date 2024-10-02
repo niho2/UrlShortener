@@ -11,15 +11,23 @@ require('dotenv').config()
 app.use(cors())
 
 // Secret Key for JWT
-const JWT_SECRET = process.env.JWT_SECRET;  // Replace this with a secure key in production
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';  // Replace this with a secure key in production
 
 // Middleware
 app.use(bodyParser.json());
 
 // MongoDB-Verbindung
-mongoose.connect('mongodb://127.0.0.1:27017/urlshortener')
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.log('Error connecting to MongoDB:', err));
+
+const connectWithRetry = () => {
+    mongoose.connect('mongodb://mongo:27017/urlshortener')
+        .then(() => console.log('MongoDB connected'))
+        .catch(err => {
+            console.log('Error connecting to MongoDB, retrying in 5 seconds...', err);
+            setTimeout(connectWithRetry, 5000);  // Retry alle 5 Sekunden
+        });
+};
+
+connectWithRetry();
 
 // MongoDB Schema und Model
 const userSchema = new mongoose.Schema({
@@ -62,7 +70,7 @@ const auth = (req, res, next) => {
 
 // Registrierung
 app.post('/api/register', async (req, res) => {
-    if (process.env.REGISTRATION_DISABLED) return res.status(403).send("Registration is currently disabled");
+    if (process.env.REGISTRATION_DISABLED === 'true') return res.status(403).send("Registration is currently disabled");
     const { username, password } = req.body;
 
     try {
@@ -95,6 +103,7 @@ app.post('/api/login', async (req, res) => {
         const token = jwt.sign({ _id: user._id, username: user.username }, JWT_SECRET);
         res.send({ token });
     } catch (err) {
+        console.log(err)
         res.status(500).send('Error logging in.');
     }
 });

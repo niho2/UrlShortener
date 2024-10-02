@@ -17,6 +17,8 @@ const LinkStatsPage = () => {
     const [totalClicks, setTotalClicks] = useState(0);
     const [destinationLink, setDestinationLink] = useState(''); // State für den Ziel-Link
 
+    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:4444';
+
     const processChartData = useCallback((data) => {
         const clickDetails = data.clickDetails.map(d => ({
             timestamp: new Date(d.timestamp),
@@ -71,14 +73,14 @@ const LinkStatsPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`http://127.0.0.1:4444/api/stats/${shortLink}`, {
+                const response = await fetch(API_URL + `/api/stats/${shortLink}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
                 if (!response.ok) throw new Error('Failed to fetch data');
                 const result = await response.json();
-                
+
                 // Set the destination link from the API response
                 setDestinationLink(result.destinationLink || 'No destination link available');
 
